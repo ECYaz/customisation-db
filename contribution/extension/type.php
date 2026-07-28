@@ -216,6 +216,13 @@ class type extends base
 	 */
 	public function validate_ext_name($name)
 	{
+		// The byte ranges below would let four byte characters through, and
+		// the name is stored in a utf8 column that cannot hold them.
+		if (emoji::contains($name))
+		{
+			return false;
+		}
+
 		return (bool) preg_match(
 			'#^[a-zA-Z0-9\x7f-\xff]{2,}/[a-zA-Z0-9\x7f-\xff]{2,}$#',
 			$name

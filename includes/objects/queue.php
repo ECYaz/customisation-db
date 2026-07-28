@@ -216,10 +216,14 @@ class titania_queue extends \phpbb\titania\entity\message_base
 		phpbb::$config['min_post_chars'] = 1;
 		phpbb::$config['max_post_chars'] = 0;
 
+		// Parse the text before the forum copy runs: it stores the post early
+		// to obtain an id, and raw text may hold four byte characters the
+		// database cannot store.
+		$post->generate_text_for_storage(true, true, true);
+
 		$this->forum_queue_update_first_queue_post($post);
 
 		// Store the post
-		$post->generate_text_for_storage(true, true, true);
 		$post->submit();
 
 		$this->queue_topic_id = $post->topic_id;
@@ -874,10 +878,13 @@ class titania_queue extends \phpbb\titania\entity\message_base
 			get_formatted_filesize($download['filesize'])
 		);
 
-		$post_text .= "\n\n" . $post_object->post_text;
+		// Decode the stored post on its own: decode_message() only unparses
+		// text that starts with the parser's markup.
+		$queue_post_text = $post_object->post_text;
+		handle_queue_attachments($post_object, $queue_post_text);
+		message::decode($queue_post_text, $post_object->post_text_uid);
 
-		handle_queue_attachments($post_object, $post_text);
-		message::decode($post_text, $post_object->post_text_uid);
+		$post_text .= "\n\n" . $queue_post_text;
 
 		$post_text .= "\n\n" . $path_helper->strip_url_params($post_object->get_url(), 'sid');
 
