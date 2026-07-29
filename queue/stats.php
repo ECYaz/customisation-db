@@ -128,7 +128,7 @@ class stats
 		$result = $this->db->sql_query($sql, $cache_ttl);
 		$data = $this->db->sql_fetchrow($result);
 
-		if ($data['total_items'])
+		if($data['total_items'])
 		{
 			if ($wait_from_current_time)
 			{
